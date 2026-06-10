@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG DM Demo</title>
+<style>
+  :root{--bg:#000;--bubble-them:#262626;--me:#3b0e9e;--me2:#7b2ff7;--sub:#a8a8a8;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  body{background:#3a3a3c;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px;min-height:100vh;}
+  .phone{width:390px;height:844px;background:var(--bg);border-radius:46px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;}
+  .status{height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 8px;color:#fff;font-size:17px;font-weight:600;flex-shrink:0;}
+  .status .right{display:flex;gap:7px;align-items:center;font-size:15px;font-weight:600;}
+  .batt{border:1.5px solid #fff;border-radius:4px;padding:1px 4px;font-size:11px;font-weight:700;}
+  .header{display:flex;align-items:center;gap:11px;padding:4px 16px 14px;flex-shrink:0;}
+  .header .back{color:#fff;font-size:30px;line-height:1;font-weight:300;}
+  .hpic{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#777,#aaa);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:16px;}
+  .hpic img{width:100%;height:100%;object-fit:cover;}
+  .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+  .who .nm{font-size:17px;font-weight:600;color:#fff;line-height:1.1;}
+  .who .un{font-size:13px;color:var(--sub);line-height:1.1;}
+  .icons{display:flex;gap:22px;color:#fff;align-items:center;}
+  .icons svg{width:25px;height:25px;color:#fff;}
+  .messages{flex:1;overflow-y:auto;padding:8px 12px 8px;display:flex;flex-direction:column;gap:3px;}
+  .messages::-webkit-scrollbar{width:0;}
+  .row{display:flex;max-width:72%;align-items:flex-end;gap:8px;}
+  .row.them{align-self:flex-start;}
+  .row.me{align-self:flex-end;flex-direction:row-reverse;}
+  .rowpic{width:26px;height:26px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#777,#aaa);}
+  .rowpic img{width:100%;height:100%;object-fit:cover;}
+  .me .rowpic{display:none;}
+  .stamp{align-self:center;color:var(--sub);font-size:12px;font-weight:600;margin:16px 0 12px;letter-spacing:.02em;}
+  .replied{align-self:flex-end;color:var(--sub);font-size:13px;margin:6px 6px 2px;font-weight:500;}
+  .bubble{padding:11px 15px;font-size:16px;line-height:1.3;color:#fff;word-wrap:break-word;animation:pop .18s ease-out;}
+  .them .bubble{background:var(--bubble-them);border-radius:20px;border-bottom-left-radius:5px;}
+  .me .bubble{background:linear-gradient(105deg,var(--me),var(--me2));border-radius:20px;border-bottom-right-radius:5px;}
+  @keyframes pop{from{transform:scale(.9);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .story-thumb{width:120px;height:200px;border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(135deg,#3a2b4d,#7d4a8c,#c96a8e);display:flex;flex-direction:column;}
+  .story-thumb img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+  .story-thumb .sh{position:relative;z-index:2;display:flex;align-items:center;gap:6px;padding:8px;}
+  .story-thumb .sh .d{width:20px;height:20px;border-radius:50%;background:#febf3e;flex-shrink:0;}
+  .story-thumb .sh .u{font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+  .story-thumb .cap{position:relative;z-index:2;margin-top:6px;padding:0 8px;color:#fff;font-size:13px;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+  .typing{display:flex;gap:5px;padding:14px 16px;background:var(--bubble-them);border-radius:20px;border-bottom-left-radius:5px;width:fit-content;}
+  .typing span{width:8px;height:8px;border-radius:50%;background:#8e8e93;animation:blink 1.2s infinite;}
+  .typing span:nth-child(2){animation-delay:.2s;}.typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+  .inputbar{flex-shrink:0;padding:8px 14px 10px;display:flex;align-items:center;gap:12px;}
+  .cam{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#4f5bd5,#d62976);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;}
+  .field{flex:1;background:transparent;border:1px solid #363636;border-radius:22px;padding:10px 16px;color:#fff;font-size:16px;min-height:42px;display:flex;align-items:center;gap:14px;}
+  .field .txt{flex:1;}
+  .field.empty .txt{color:var(--sub);}
+  .field .cursor{display:inline-block;width:2px;height:19px;background:#fff;margin-left:1px;vertical-align:middle;animation:caret .9s steps(1) infinite;}
+  @keyframes caret{50%{opacity:0;}}
+  .field .ic{display:flex;gap:14px;color:#fff;}
+  .field .ic svg{width:24px;height:24px;color:#fff;}
+  .panel{width:390px;background:#1c1c1e;border-radius:16px;padding:16px;color:#fff;font-size:13px;display:flex;flex-direction:column;gap:12px;}
+  .panel h3{font-size:13px;font-weight:600;}
+  .panel label{display:block;color:#8e8e93;font-size:11px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+  .panel input[type=text]{width:100%;background:#2c2c2e;border:1px solid #38383a;border-radius:8px;color:#fff;padding:8px 10px;font-size:13px;}
+  .uploadrow{display:flex;gap:8px;}
+  .uploadrow .up{flex:1;background:#2c2c2e;border:1px dashed #48484a;border-radius:8px;padding:9px;text-align:center;cursor:pointer;color:#a8a8a8;font-size:12px;}
+  .two{display:flex;gap:10px;}.two>div{flex:1;}
+  .script{display:flex;flex-direction:column;gap:8px;}
+  .line{display:flex;gap:8px;align-items:center;background:#2c2c2e;border-radius:8px;padding:8px;transition:border-color .1s;border:1px solid transparent;}
+  .line.over{border-color:#3897f0;}
+  .line.dragging{opacity:.4;}
+  .grip{cursor:grab;color:#8e8e93;font-size:16px;padding:0 2px;flex-shrink:0;user-select:none;line-height:1;}
+  .grip:active{cursor:grabbing;}
+  .line select{background:#1c1c1e;border:1px solid #38383a;border-radius:6px;color:#fff;padding:7px;font-size:12px;flex-shrink:0;}
+  .line input{flex:1;background:#1c1c1e;border:1px solid #38383a;border-radius:6px;color:#fff;padding:7px 9px;font-size:13px;}
+  .line .del{background:#48282a;color:#ff6b6b;border:none;border-radius:6px;width:30px;height:30px;cursor:pointer;flex-shrink:0;font-size:14px;}
+  .addline{background:#2c2c2e;border:1px dashed #48484a;border-radius:8px;color:#a8a8a8;padding:9px;cursor:pointer;font-size:12px;}
+  .delayrow{display:flex;align-items:center;gap:10px;}
+  .delayrow input[type=range]{flex:1;}
+  .delayrow .val{font-weight:700;font-size:14px;min-width:30px;text-align:right;}
+  .btns{display:flex;gap:8px;}
+  .btns button{flex:1;background:#3897f0;border:none;border-radius:10px;color:#fff;padding:12px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btns button.alt{background:#2c2c2e;}
+  .hint{color:#636366;font-size:11px;line-height:1.4;}
+  /* dark iOS keyboard */
+  .keyboard{flex-shrink:0;background:#1c1c1e;padding:6px 4px 26px;display:flex;flex-direction:column;gap:8px;transform:translateY(100%);max-height:0;opacity:0;transition:transform .28s ease,max-height .28s ease,opacity .2s;overflow:hidden;}
+  .keyboard.up{transform:translateY(0);max-height:300px;opacity:1;}
+  .krow{display:flex;justify-content:center;gap:5px;padding:0 3px;}
+  .krow-3{padding:0 3px;}
+  .key{
+    flex:1;min-width:0;height:42px;background:#6b6b6e;border-radius:5px;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:18px;font-weight:400;
+    box-shadow:0 1px 0 rgba(0,0,0,.4);transition:background .08s,transform .08s;
+    text-transform:lowercase;
+  }
+  .key.lit{background:#fff;color:#000;transform:scale(1.04);}
+  .key-fn{background:#3a3a3c;font-size:15px;flex:0 0 auto;padding:0 14px;}
+  .key-emoji{padding:0 12px;font-size:18px;}
+  .key-space{flex:1;font-size:15px;color:#fff;}
+  .key-return{background:#3a3a3c;flex:0 0 auto;padding:0 14px;font-size:15px;}
+  .krow-3 .key-shift,.krow-3 .key-del{background:#3a3a3c;flex:0 0 42px;font-size:17px;}
+
+  .countdown{position:absolute;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:50;}
+  .countdown.on{display:flex;}
+  .countdown .n{font-size:120px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;}
+
+  /* fullscreen / present mode */
+  .stage{display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .stage.fs{position:fixed;inset:0;z-index:100;background:#000;justify-content:center;gap:0;padding:0;}
+  .stage.fs .panel{display:none;}
+  .stage.fs .phone{
+    width:auto;height:100vh;max-height:100vh;aspect-ratio:390/844;
+    border-radius:0;box-shadow:none;
+  }
+  .exitfs{display:none;position:fixed;top:16px;right:16px;z-index:101;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px);}
+  .stage.fs .exitfs{display:block;}
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+  <button class="exitfs" id="exitFs">Exit fullscreen (Esc)</button>
+  <div class="phone" id="phone">
+    <div class="countdown" id="countdown"><div class="n" id="cdNum">5</div></div>
+    <div class="status">
+      <span id="clock">3:56</span>
+      <span class="right">5G <span class="batt">84</span></span>
+    </div>
+    <div class="header">
+      <span class="back">&lsaquo;</span>
+      <div class="hpic" id="hpic"><span id="hpicInit">M</span></div>
+      <div class="who"><span class="nm" id="contactName">maya</span><span class="un" id="contactUser">mayalael</span></div>
+      <div class="icons">
+        <svg aria-label="Audio Call" fill="currentColor" height="25" role="img" viewBox="0 0 24 24" width="25"><path d="M18.227 22.912c-4.913 0-9.286-3.627-11.486-5.828C4.486 14.83.731 10.291.921 5.231a3.289 3.289 0 0 1 .908-2.138 17.116 17.116 0 0 1 1.865-1.71 2.307 2.307 0 0 1 3.004.174 13.283 13.283 0 0 1 3.658 5.325 2.551 2.551 0 0 1-.19 1.941l-.455.853a.463.463 0 0 0-.024.387 7.57 7.57 0 0 0 4.077 4.075.455.455 0 0 0 .386-.024l.853-.455a2.548 2.548 0 0 1 1.94-.19 13.278 13.278 0 0 1 5.326 3.658 2.309 2.309 0 0 1 .174 3.003 17.319 17.319 0 0 1-1.71 1.866 3.29 3.29 0 0 1-2.138.91 10.27 10.27 0 0 1-.368.006Zm-13.144-20a.27.27 0 0 0-.167.054A15.121 15.121 0 0 0 3.28 4.47a1.289 1.289 0 0 0-.36.836c-.161 4.301 3.21 8.34 5.235 10.364s6.06 5.403 10.366 5.236a1.284 1.284 0 0 0 .835-.36 15.217 15.217 0 0 0 1.504-1.637.324.324 0 0 0-.047-.41 11.62 11.62 0 0 0-4.457-3.119.545.545 0 0 0-.411.044l-.854.455a2.452 2.452 0 0 1-2.071.116 9.571 9.571 0 0 1-5.189-5.188 2.457 2.457 0 0 1 .115-2.071l.456-.855a.544.544 0 0 0 .043-.41 11.629 11.629 0 0 0-3.118-4.458.36.36 0 0 0-.244-.1Z"></path></svg>
+        <svg aria-label="Video Call" fill="currentColor" height="25" role="img" viewBox="0 0 24 24" width="25"><rect fill="none" height="18" rx="3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="16.999" x="1" y="3"></rect><path d="m17.999 9.146 2.495-2.256A1.5 1.5 0 0 1 23 8.003v7.994a1.5 1.5 0 0 1-2.506 1.113L18 14.854" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+      </div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="inputbar">
+      <span class="cam"><svg viewBox="0 0 24 24" width="24" height="24" aria-label="Camera"><path fill="#fff" fill-rule="evenodd" d="M9.4 4.2c.28-.43.76-.7 1.27-.7h2.66c.51 0 .99.27 1.27.7l.6.92c.16.24.43.38.71.38H17a3 3 0 0 1 3 3v6.4a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8.5a3 3 0 0 1 3-3h.41c.28 0 .55-.14.71-.38l.6-.92ZM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8Zm-1.6 3.4a1.6 1.6 0 1 1 3.2 0 1.6 1.6 0 0 1-3.2 0Z" clip-rule="evenodd"/></svg></span>
+      <div class="field empty" id="field">
+        <span class="txt" id="fieldText">Message...</span>
+        <span class="ic" id="fieldIcons">
+          <svg aria-label="Voice clip" fill="currentColor" height="24" role="img" viewBox="0 0 24 24" width="24"><path d="M19.5 10.671v.897a7.5 7.5 0 0 1-15 0v-.897" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><line fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2" x1="12" x2="12" y1="19.068" y2="22"></line><line fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" x1="8.706" x2="15.104" y1="22" y2="22"></line><path d="M12 15.745a4 4 0 0 1-4-4V6a4 4 0 0 1 8 0v5.745a4 4 0 0 1-4 4Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          <svg aria-label="Add photo or video" fill="currentColor" height="24" role="img" viewBox="0 0 24 24" width="24"><path d="M6.549 5.013A1.557 1.557 0 1 0 8.106 6.57a1.557 1.557 0 0 0-1.557-1.557Z" fill-rule="evenodd"></path><path d="m2 18.605 3.901-3.9a.908.908 0 0 1 1.284 0l2.807 2.806a.908.908 0 0 0 1.283 0l5.534-5.534a.908.908 0 0 1 1.283 0l3.905 3.905" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2"></path><path d="M18.44 2.004A3.56 3.56 0 0 1 22 5.564h0v12.873a3.56 3.56 0 0 1-3.56 3.56H5.568a3.56 3.56 0 0 1-3.56-3.56V5.563a3.56 3.56 0 0 1 3.56-3.56Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+          <svg aria-label="Choose a GIF or sticker" fill="currentColor" height="24" role="img" viewBox="0 0 24 24" width="24"><path d="M13.11 22H7.416A5.417 5.417 0 0 1 2 16.583V7.417A5.417 5.417 0 0 1 7.417 2h9.166A5.417 5.417 0 0 1 22 7.417v5.836a2.083 2.083 0 0 1-.626 1.488l-6.808 6.664A2.083 2.083 0 0 1 13.11 22Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><circle cx="8.238" cy="9.943" r="1.335"></circle><circle cx="15.762" cy="9.943" r="1.335"></circle><path d="M15.174 15.23a4.887 4.887 0 0 1-6.937-.301" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M22 10.833v1.629a1.25 1.25 0 0 1-1.25 1.25h-1.79a5.417 5.417 0 0 0-5.417 5.417v1.62a1.25 1.25 0 0 1-1.25 1.25H9.897" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+        </span>
+      </div>
+    </div>
+    <div class="keyboard" id="keyboard">
+      <div class="krow" data-row="0"></div>
+      <div class="krow" data-row="1"></div>
+      <div class="krow krow-3" data-row="2"></div>
+      <div class="krow krow-space">
+        <span class="key key-fn" data-k="123">123</span>
+        <span class="key key-fn key-emoji">&#128512;</span>
+        <span class="key key-space" data-k=" ">space</span>
+        <span class="key key-return">return</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Demo controls <span class="hint">(crop out when recording)</span></h3>
+    <div class="uploadrow">
+      <label class="up"><span id="lblPic">&#128247; Profile pic</span><input type="file" accept="image/*" id="upPic" hidden></label>
+      <label class="up"><span id="lblStory">&#128444; Story image</span><input type="file" accept="image/*" id="upStory" hidden></label>
+    </div>
+    <div class="two">
+      <div><label>Name</label><input type="text" id="inName" value="maya"></div>
+      <div><label>Username</label><input type="text" id="inUser" value="mayalael"></div>
+    </div>
+    <div><label>Story caption (top card)</label><input type="text" id="inStory" value="golden hour"></div>
+    <div>
+      <label>Conversation script (top to bottom)</label>
+      <div class="script" id="script"></div>
+      <div class="addline" id="addLine">+ Add line</div>
+    </div>
+    <div>
+      <label>Start delay (seconds to set up recording)</label>
+      <div class="delayrow"><input type="range" id="delay" min="0" max="5" step="1" value="3"><span class="val" id="delayVal">3s</span></div>
+    </div>
+    <div class="btns">
+      <button id="play">&#9654; Play demo</button>
+      <button class="alt" id="reset">&#8634; Reset</button>
+    </div>
+    <div class="btns">
+      <button id="fsBtn" style="background:#2c2c2e;">&#9974; Fullscreen (clean record)</button>
+    </div>
+    <p class="hint">Add as many lines as you want, tag each "you" or "them". Your lines type out live; their lines come in after typing dots. Hit Play, the countdown gives you time to start recording and scroll into position. Crop this panel out of frame.</p>
+  </div>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+const messages=$('messages'),field=$('field'),fieldText=$('fieldText'),fieldIcons=$('fieldIcons');
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let picURL=null,storyURL=null;
+(function setClock(){const d=new Date();$('clock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');})();
+$('upPic').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{picURL=ev.target.result;$('lblPic').innerHTML='\u2705 pic set';buildStatic();};r.onerror=()=>{$('lblPic').innerHTML='\u26A0 retry';};r.readAsDataURL(f);};
+$('upStory').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{storyURL=ev.target.result;$('lblStory').innerHTML='\u2705 story set';buildStatic();};r.onerror=()=>{$('lblStory').innerHTML='\u26A0 retry';};r.readAsDataURL(f);};
+$('delay').oninput=e=>$('delayVal').textContent=e.target.value+'s';
+
+const defaultScript=[
+  {who:'you',text:'ok the lighting ate but you ate it harder fr'},
+  {who:'them',text:'STOPP who taught you that'},
+  {who:'you',text:'born with it. you free this weekend or nah'},
+  {who:'them',text:'maybe depends where you taking me'},
+];
+let scriptData=JSON.parse(JSON.stringify(defaultScript));
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+let dragFrom=null;
+function renderScript(){
+  const wrap=$('script');wrap.innerHTML='';
+  scriptData.forEach((l,i)=>{
+    const row=document.createElement('div');row.className='line';row.dataset.i=i;
+
+    const grip=document.createElement('span');grip.className='grip';grip.textContent='\u2630';
+    grip.title='Drag to reorder';grip.draggable=true;
+    grip.ondragstart=ev=>{dragFrom=i;row.classList.add('dragging');ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text','');};
+    grip.ondragend=()=>{row.classList.remove('dragging');document.querySelectorAll('.line').forEach(r=>r.classList.remove('over'));};
+
+    row.ondragover=ev=>{ev.preventDefault();ev.dataTransfer.dropEffect='move';row.classList.add('over');};
+    row.ondragleave=()=>row.classList.remove('over');
+    row.ondrop=ev=>{ev.preventDefault();row.classList.remove('over');
+      const to=+row.dataset.i;
+      if(dragFrom===null||dragFrom===to)return;
+      const moved=scriptData.splice(dragFrom,1)[0];
+      scriptData.splice(to,0,moved);
+      dragFrom=null;renderScript();};
+
+    const sel=document.createElement('select');sel.dataset.i=i;
+    sel.innerHTML='<option value="you">you</option><option value="them">them</option>';
+    sel.value=l.who;sel.onchange=e=>{scriptData[e.target.dataset.i].who=e.target.value;};
+    const inp=document.createElement('input');inp.type='text';inp.dataset.i=i;inp.value=l.text;
+    inp.oninput=e=>{scriptData[e.target.dataset.i].text=e.target.value;};
+    const del=document.createElement('button');del.className='del';del.textContent='X';del.dataset.i=i;
+    del.onclick=e=>{scriptData.splice(+e.target.dataset.i,1);renderScript();};
+    row.append(grip,sel,inp,del);wrap.appendChild(row);
+  });
+}
+$('addLine').onclick=()=>{scriptData.push({who:'you',text:''});renderScript();};
+renderScript();
+
+// build keyboard
+const kbRows=['qwertyuiop','asdfghjkl','zxcvbnm'];
+const keyMap={};
+const kb=$('keyboard');
+kbRows.forEach((r,ri)=>{
+  const rowEl=kb.querySelector('.krow[data-row="'+ri+'"]');
+  if(ri===2){
+    const shift=document.createElement('span');shift.className='key key-shift';shift.textContent='\u21E7';rowEl.appendChild(shift);
+  }
+  for(const ch of r){
+    const k=document.createElement('span');k.className='key';k.dataset.k=ch;k.textContent=ch;
+    rowEl.appendChild(k);keyMap[ch]=k;
+  }
+  if(ri===2){
+    const del=document.createElement('span');del.className='key key-del';del.textContent='\u232B';rowEl.appendChild(del);
+  }
+});
+function showKb(){kb.classList.add('up');}
+function hideKb(){kb.classList.remove('up');}
+async function litKey(ch){
+  const k=keyMap[ch.toLowerCase()];
+  if(!k)return;
+  k.classList.add('lit');
+  setTimeout(()=>k.classList.remove('lit'),110);
+}
+
+function rowPicHTML(){return picURL?'<div class="rowpic"><img src="'+picURL+'"></div>':'<div class="rowpic"></div>';}
+function buildStatic(){
+  const name=$('inName').value||'them';
+  $('contactName').textContent=name;
+  $('contactUser').textContent=$('inUser').value||'';
+  const hp=$('hpic');hp.innerHTML=picURL?'<img src="'+picURL+'">':'<span>'+(name[0]||'?').toUpperCase()+'</span>';
+  messages.innerHTML='';
+  const rep=document.createElement('div');rep.className='replied';rep.textContent='You replied to their story';
+  messages.appendChild(rep);
+  const row=document.createElement('div');row.className='row me';
+  row.innerHTML='<div class="story-thumb">'+(storyURL?'<img src="'+storyURL+'">':'')+'<div class="sh"><div class="d"></div><div class="u">'+esc($('inUser').value||name)+'</div></div><div class="cap">'+esc($('inStory').value||'')+'</div></div>';
+  messages.appendChild(row);
+  const st=document.createElement('div');st.className='stamp';
+  const d=new Date();st.textContent=d.toLocaleDateString('en-US',{day:'numeric',month:'short'}).toUpperCase()+' AT '+$('clock').textContent+(d.getHours()<12?' AM':' PM');
+  messages.appendChild(st);
+}
+async function typeInField(text){
+  field.classList.remove('empty');fieldText.textContent='';fieldIcons.style.display='none';
+  showKb();
+  await wait(320);
+  const cursor=document.createElement('span');cursor.className='cursor';
+  let buf='';
+  for(const ch of text){buf+=ch;fieldText.textContent=buf;fieldText.appendChild(cursor);litKey(ch);let d=38+Math.random()*45;if(ch===' ')d+=10;await wait(d);}
+  await wait(260);
+}
+function sendBubble(text){
+  const row=document.createElement('div');row.className='row me';
+  row.innerHTML='<div class="bubble">'+esc(text)+'</div>';
+  messages.appendChild(row);messages.scrollTop=messages.scrollHeight;
+  field.classList.add('empty');fieldText.textContent='Message...';fieldIcons.style.display='flex';
+  hideKb();
+}
+async function themLine(text){
+  const t=document.createElement('div');t.className='row them';
+  t.innerHTML=rowPicHTML()+'<div class="typing"><span></span><span></span><span></span></div>';
+  messages.appendChild(t);messages.scrollTop=messages.scrollHeight;
+  await wait(900+Math.min(text.length*22,1400));t.remove();
+  const row=document.createElement('div');row.className='row them';
+  row.innerHTML=rowPicHTML()+'<div class="bubble">'+esc(text)+'</div>';
+  messages.appendChild(row);messages.scrollTop=messages.scrollHeight;
+}
+async function countdown(secs){
+  if(secs<=0)return;
+  const cd=$('countdown'),num=$('cdNum');cd.classList.add('on');
+  for(let s=secs;s>=1;s--){num.textContent=s;await wait(1000);}
+  cd.classList.remove('on');
+}
+async function play(){
+  buildStatic();
+  await countdown(parseInt($('delay').value,10));
+  await wait(400);
+  for(const line of scriptData){
+    if(!line.text.trim())continue;
+    if(line.who==='you'){await typeInField(line.text);sendBubble(line.text);await wait(450);}
+    else{await wait(300);await themLine(line.text);await wait(450);}
+  }
+}
+$('play').onclick=play;$('reset').onclick=buildStatic;
+
+// fullscreen / present mode
+const stage=$('stage');
+function enterFs(){
+  stage.classList.add('fs');
+  if(stage.requestFullscreen){stage.requestFullscreen().catch(()=>{});}
+}
+function exitFs(){
+  stage.classList.remove('fs');
+  if(document.fullscreenElement&&document.exitFullscreen){document.exitFullscreen().catch(()=>{});}
+}
+$('fsBtn').onclick=enterFs;
+$('exitFs').onclick=exitFs;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')exitFs();});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)stage.classList.remove('fs');});
+
+buildStatic();
+</script>
+</body>
+</html>
