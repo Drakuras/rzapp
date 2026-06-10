@@ -198,7 +198,7 @@ $('upStory').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return
 $('delay').oninput=e=>$('delayVal').textContent=e.target.value+'s';
 
 const defaultScript=[
-  {who:'story',text:'golden hour'},
+  {who:'story',text:'ok the vibe here is immaculate 😭'},
   {who:'you',text:'ok the lighting ate but you ate it harder fr'},
   {who:'them',text:'STOPP who taught you that'},
   {who:'you',text:'born with it. you free this weekend or nah'},
@@ -317,10 +317,12 @@ async function play(){
       const rep=document.createElement('div');rep.className='replied';rep.textContent='You replied to their story';
       messages.appendChild(rep);
       const row=document.createElement('div');row.className='row me';
-      const cap=line.text.trim()||$('inStory').value||'';
+      const cap=$('inStory').value||'';
       row.innerHTML='<div class="story-thumb">'+(storyURL?'<img src="'+storyURL+'">':'')+'<div class="sh"><div class="d"></div><div class="u">'+esc($('inUser').value||$('inName').value)+'</div></div><div class="cap">'+esc(cap)+'</div></div>';
       messages.appendChild(row);messages.scrollTop=messages.scrollHeight;
-      await wait(450);continue;
+      await wait(450);
+      if(line.text.trim()){await typeInField(line.text);sendBubble(line.text);await wait(450);}
+      continue;
     }
     if(!line.text.trim())continue;
     if(line.who==='you'){await typeInField(line.text);sendBubble(line.text);await wait(450);}
