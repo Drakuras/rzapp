@@ -8,7 +8,7 @@
   :root{--bg:#000;--bubble-them:#262626;--me:#3b0e9e;--me2:#7b2ff7;--sub:#a8a8a8;}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
   body{background:#3a3a3c;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px;min-height:100vh;}
-  .phone{width:390px;height:844px;background:var(--bg);border-radius:46px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;}
+  .phone{width:390px;aspect-ratio:9/19.5;background:var(--bg);border-radius:46px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;}
   .status{height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 30px 8px;color:#fff;font-size:17px;font-weight:600;flex-shrink:0;}
   .status .right{display:flex;gap:7px;align-items:center;font-size:15px;font-weight:600;}
   .batt{border:1.5px solid #fff;border-radius:4px;padding:1px 4px;font-size:11px;font-weight:700;}
@@ -106,7 +106,7 @@
   .stage.fs{position:fixed;inset:0;z-index:100;background:#000;justify-content:center;gap:0;padding:0;}
   .stage.fs .panel{display:none;}
   .stage.fs .phone{
-    width:auto;height:100vh;max-height:100vh;aspect-ratio:390/844;
+    width:auto;height:100vh;max-height:100vh;aspect-ratio:9/19.5;
     border-radius:0;box-shadow:none;
   }
   .exitfs{display:none;position:fixed;top:16px;right:16px;z-index:101;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px);}
@@ -166,7 +166,7 @@
       <div><label>Name</label><input type="text" id="inName" value="maya"></div>
       <div><label>Username</label><input type="text" id="inUser" value="mayalael"></div>
     </div>
-    <div><label>Story caption (top card)</label><input type="text" id="inStory" value="golden hour"></div>
+    <div><label>Story caption (used in story lines)</label><input type="text" id="inStory" value="golden hour"></div>
     <div>
       <label>Conversation script (top to bottom)</label>
       <div class="script" id="script"></div>
@@ -198,6 +198,7 @@ $('upStory').onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return
 $('delay').oninput=e=>$('delayVal').textContent=e.target.value+'s';
 
 const defaultScript=[
+  {who:'story',text:'golden hour'},
   {who:'you',text:'ok the lighting ate but you ate it harder fr'},
   {who:'them',text:'STOPP who taught you that'},
   {who:'you',text:'born with it. you free this weekend or nah'},
@@ -226,7 +227,7 @@ function renderScript(){
       dragFrom=null;renderScript();};
 
     const sel=document.createElement('select');sel.dataset.i=i;
-    sel.innerHTML='<option value="you">you</option><option value="them">them</option>';
+    sel.innerHTML='<option value="you">you</option><option value="them">them</option><option value="story">story</option>';
     sel.value=l.who;sel.onchange=e=>{scriptData[e.target.dataset.i].who=e.target.value;};
     const inp=document.createElement('input');inp.type='text';inp.dataset.i=i;inp.value=l.text;
     inp.oninput=e=>{scriptData[e.target.dataset.i].text=e.target.value;};
@@ -271,11 +272,7 @@ function buildStatic(){
   $('contactUser').textContent=$('inUser').value||'';
   const hp=$('hpic');hp.innerHTML=picURL?'<img src="'+picURL+'">':'<span>'+(name[0]||'?').toUpperCase()+'</span>';
   messages.innerHTML='';
-  const rep=document.createElement('div');rep.className='replied';rep.textContent='You replied to their story';
-  messages.appendChild(rep);
-  const row=document.createElement('div');row.className='row me';
-  row.innerHTML='<div class="story-thumb">'+(storyURL?'<img src="'+storyURL+'">':'')+'<div class="sh"><div class="d"></div><div class="u">'+esc($('inUser').value||name)+'</div></div><div class="cap">'+esc($('inStory').value||'')+'</div></div>';
-  messages.appendChild(row);
+
   const st=document.createElement('div');st.className='stamp';
   const d=new Date();st.textContent=d.toLocaleDateString('en-US',{day:'numeric',month:'short'}).toUpperCase()+' AT '+$('clock').textContent+(d.getHours()<12?' AM':' PM');
   messages.appendChild(st);
@@ -316,6 +313,15 @@ async function play(){
   await countdown(parseInt($('delay').value,10));
   await wait(400);
   for(const line of scriptData){
+    if(line.who==='story'){
+      const rep=document.createElement('div');rep.className='replied';rep.textContent='You replied to their story';
+      messages.appendChild(rep);
+      const row=document.createElement('div');row.className='row me';
+      const cap=line.text.trim()||$('inStory').value||'';
+      row.innerHTML='<div class="story-thumb">'+(storyURL?'<img src="'+storyURL+'">':'')+'<div class="sh"><div class="d"></div><div class="u">'+esc($('inUser').value||$('inName').value)+'</div></div><div class="cap">'+esc(cap)+'</div></div>';
+      messages.appendChild(row);messages.scrollTop=messages.scrollHeight;
+      await wait(450);continue;
+    }
     if(!line.text.trim())continue;
     if(line.who==='you'){await typeInField(line.text);sendBubble(line.text);await wait(450);}
     else{await wait(300);await themLine(line.text);await wait(450);}
